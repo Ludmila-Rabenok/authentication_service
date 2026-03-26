@@ -31,7 +31,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn sonar:sonar \
-            -Dsonar.projectKey=Ludmila-Rabenok_auth_service \
+            -Dsonar.projectKey=Ludmila-Rabenok_authentication_service \
             -Dsonar.organization=ludmila-rabenok \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN \
