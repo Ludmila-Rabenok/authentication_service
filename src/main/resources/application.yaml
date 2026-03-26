@@ -1,0 +1,27 @@
+#spring:
+#  application:
+#    name: AuthenticationService
+#
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/auth_users
+#    username: postgres
+#    password: 963Luda963
+#    driver-class-name: org.postgresql.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.PostgreSQLDialect
+#
+#jwt:
+#  secret: "uQ2x8V7p1mJ9kA3sL0fWc9TqZ5rN8yB1vH4eD7tP6gK2mS9xQ8lF3zR7wC5uN0aJ"
+#  access-token-expiration-ms: 900000
+#  refresh-token-expiration-ms: 2592000000
+spring:
+  application:
+    name: AuthenticationService
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
