@@ -40,11 +40,10 @@ class TokenServiceTest {
   void shouldFalse_whenExpiredToken() throws InterruptedException {
     TokenService tokenServiceBad = new TokenService(
             "uQ2x8V7p1mJ9kA3sL0fWc9TqZ5rN8yB1vH4eD7tP6gK2mS9xQ8lF3zR7wC5uN0aJ",
-            1,
-            1
+            0,
+            0
     );
     String token = tokenServiceBad.generateAccessToken(1L, "ADMIN");
-    Thread.sleep(5);
 
     assertFalse(tokenServiceBad.isTokenValid(token));
   }
