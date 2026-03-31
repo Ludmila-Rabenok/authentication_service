@@ -8,73 +8,49 @@ import com.example.authenticationservice.dto.response.AccessTokenResponseDto;
 import com.example.authenticationservice.dto.response.RegisterResponseDto;
 import com.example.authenticationservice.dto.response.TokenResponseDto;
 import com.example.authenticationservice.dto.response.ValidateResponseDto;
-import com.example.authenticationservice.entity.AuthUser;
-import com.example.authenticationservice.entity.Role;
-import com.example.authenticationservice.exception.InvalidCredentialsException;
-import com.example.authenticationservice.exception.InvalidTokenException;
-import com.example.authenticationservice.exception.UserAlreadyExistsException;
-import com.example.authenticationservice.exception.UserNotFoundException;
-import com.example.authenticationservice.repository.AuthUserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-@Service
-public class AuthUserService {
+/**
+ * Service responsible for user authentication and token lifecycle management.
+ * <p>
+ * Provides operations for user registration, login, token refreshing and
+ * access token validation.
+ */
+public interface AuthUserService {
 
-  private final AuthUserRepository repository;
-  private final TokenService tokenService;
-  private final BCryptPasswordEncoder passwordEncoder;
+  /**
+   * Registers a new user in the system.
+   *
+   * @param request DTO containing login, password and role of the new user
+   * @return DTO containing the ID of the newly created user
+   * @throws UserAlreadyExistsException if a user with the same login already exists
+   */
+  RegisterResponseDto register(RegisterRequestDto request);
 
-  public AuthUserService(AuthUserRepository repository,
-                         TokenService tokenService) {
-    this.repository = repository;
-    this.tokenService = tokenService;
-    this.passwordEncoder = new BCryptPasswordEncoder();
-  }
+  /**
+   * Authenticates a user using login and password and generates a pair of tokens.
+   *
+   * @param request DTO containing login and password
+   * @return DTO containing access and refresh tokens
+   * @throws UserNotFoundException       if no user with the given login exists
+   * @throws InvalidCredentialsException if the provided password is incorrect
+   */
+  TokenResponseDto login(LoginRequestDto request);
 
-  @Transactional
-  public RegisterResponseDto register(RegisterRequestDto request) {
-    if (repository.findByLogin(request.login()).isPresent()) {
-      throw new UserAlreadyExistsException(request.login());
-    }
-    AuthUser user = new AuthUser();
-    user.setLogin(request.login());
-    user.setPasswordHash(passwordEncoder.encode(request.password()));
-    user.setRole(Role.valueOf(request.role()));
-    AuthUser saved = repository.save(user);
-    return new RegisterResponseDto(saved.getId());
-  }
+  /**
+   * Generates a new access token using a valid refresh token.
+   *
+   * @param request DTO containing the refresh token
+   * @return DTO containing a newly generated access token
+   * @throws InvalidTokenException if the refresh token is invalid, expired or malformed
+   */
+  AccessTokenResponseDto refresh(RefreshRequestDto request);
 
-  public TokenResponseDto login(LoginRequestDto request) {
-    AuthUser user = repository.findByLogin(request.login())
-            .orElseThrow(() -> new UserNotFoundException(request.login()));
-    if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-      throw new InvalidCredentialsException();
-    }
-    String access = tokenService.generateAccessToken(user.getId(), user.getRole().name());
-    String refresh = tokenService.generateRefreshToken(user.getId(), user.getRole().name());
-    return new TokenResponseDto(access, refresh);
-  }
-
-  public AccessTokenResponseDto refresh(RefreshRequestDto request) {
-    String refreshToken = request.refreshToken();
-    if (!tokenService.isTokenValid(refreshToken)) {
-      throw new InvalidTokenException();
-    }
-    Long userId = tokenService.getUserId(refreshToken);
-    String role = tokenService.getRole(refreshToken);
-    String newAccess = tokenService.generateAccessToken(userId, role);
-    return new AccessTokenResponseDto(newAccess);
-  }
-
-  public ValidateResponseDto validate(ValidateRequestDto request) {
-    String accessToken = request.accessToken();
-    if (!tokenService.isTokenValid(accessToken)) {
-      throw new InvalidTokenException();
-    }
-    Long userId = tokenService.getUserId(accessToken);
-    String role = tokenService.getRole(accessToken);
-    return new ValidateResponseDto(userId, role);
-  }
+  /**
+   * Validates an access token and extracts user information from it.
+   *
+   * @param request DTO containing the access token
+   * @return DTO containing user ID and role extracted from the token
+   * @throws InvalidTokenException if the access token is invalid, expired or malformed
+   */
+  ValidateResponseDto validate(ValidateRequestDto request);
 }

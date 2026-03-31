@@ -1,80 +1,60 @@
 package com.example.authenticationservice.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+/**
+ * Service responsible for generating, validating and parsing JWT tokens.
+ * <p>
+ * Provides operations for creating access and refresh tokens, validating
+ * their integrity and extracting user-related information from them.
+ */
+public interface TokenService {
 
-import javax.crypto.SecretKey;
-import java.time.Instant;
-import java.util.Date;
-import java.util.Map;
+  /**
+   * Generates a signed JWT access token for the given user.
+   *
+   * @param userId ID of the authenticated user
+   * @param role   role of the user (e.g. ADMIN, USER)
+   * @return signed JWT access token
+   */
+  String generateAccessToken(Long userId, String role);
 
-@Service
-public class TokenService {
+  /**
+   * Generates a signed JWT refresh token for the given user.
+   *
+   * @param userId ID of the authenticated user
+   * @param role   role of the user
+   * @return signed JWT refresh token
+   */
 
-  private final SecretKey secretKey;
-  private final long accessTokenExpirationMs;
-  private final long refreshTokenExpirationMs;
+  String generateRefreshToken(Long userId, String role);
 
-  public TokenService(
-          @Value("${jwt.secret}") String secret,
-          @Value("${jwt.access-token-expiration-ms}") long accessTokenExpirationMs,
-          @Value("${jwt.refresh-token-expiration-ms}") long refreshTokenExpirationMs
-  ) {
-    this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
-    this.accessTokenExpirationMs = accessTokenExpirationMs;
-    this.refreshTokenExpirationMs = refreshTokenExpirationMs;
-  }
+  /**
+   * Validates the provided JWT token and throws an exception if it is invalid.
+   * <p>
+   * This method checks token signature, expiration time, structure and
+   * supported format.
+   *
+   * @param token JWT token to validate
+   * @throws InvalidTokenException if the token is expired, malformed,
+   *                               has an invalid signature, is unsupported,
+   *                               or is empty
+   */
+  void validateTokenOrThrow(String token);
 
-  public String generateAccessToken(Long userId, String role) {
-    return buildToken(userId, role, accessTokenExpirationMs);
-  }
+  /**
+   * Extracts the user ID from a valid JWT token.
+   *
+   * @param token JWT token
+   * @return user ID stored in the token
+   * @throws InvalidTokenException if the token is invalid
+   */
+  Long getUserId(String token);
 
-  public String generateRefreshToken(Long userId, String role) {
-    return buildToken(userId, role, refreshTokenExpirationMs);
-  }
-
-  private String buildToken(Long userId, String role, long expirationMs) {
-    Instant now = Instant.now();
-    Instant expiry = now.plusMillis(expirationMs);
-
-    return Jwts.builder()
-            .setSubject(String.valueOf(userId))
-            .setIssuedAt(Date.from(now))
-            .setExpiration(Date.from(expiry))
-            .addClaims(Map.of("role", role))
-            .signWith(secretKey, SignatureAlgorithm.HS256)
-            .compact();
-  }
-
-  public boolean isTokenValid(String token) {
-    try {
-      parseClaims(token);
-      return true;
-    } catch (JwtException | IllegalArgumentException e) {
-      return false;
-    }
-  }
-
-  public Long getUserId(String token) {
-    Claims claims = parseClaims(token);
-    return Long.valueOf(claims.getSubject());
-  }
-
-  public String getRole(String token) {
-    Claims claims = parseClaims(token);
-    return claims.get("role", String.class);
-  }
-
-  private Claims parseClaims(String token) {
-    return Jwts.parserBuilder()
-            .setSigningKey(secretKey)
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
-  }
+  /**
+   * Extracts the user role from a valid JWT token.
+   *
+   * @param token JWT token
+   * @return user role stored in the token
+   * @throws InvalidTokenException if the token is invalid
+   */
+  String getRole(String token);
 }

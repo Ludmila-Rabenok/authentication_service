@@ -12,14 +12,15 @@ import com.example.authenticationservice.dto.response.ValidateResponseDto;
 import com.example.authenticationservice.entity.AuthUser;
 import com.example.authenticationservice.entity.Role;
 import com.example.authenticationservice.exception.InvalidCredentialsException;
-import com.example.authenticationservice.exception.InvalidTokenException;
 import com.example.authenticationservice.exception.UserAlreadyExistsException;
 import com.example.authenticationservice.exception.UserNotFoundException;
 import com.example.authenticationservice.repository.AuthUserRepository;
+import com.example.authenticationservice.service.impl.AuthUserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -29,18 +30,20 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuthUserServiceTest {
+class AuthUserServiceImplTest {
   @Mock
   private AuthUserRepository repository;
   @Mock
   private TokenService tokenService;
+  @Spy
+  private BCryptPasswordEncoder passwordEncoder;
   @InjectMocks
-  private AuthUserService authUserService;
-
+  private AuthUserServiceImpl authUserService;
 
   @Test
   void register_shouldRegister() {
@@ -72,8 +75,9 @@ class AuthUserServiceTest {
     AuthUser user = new AuthUser();
     user.setId(1L);
     user.setLogin("Ivan");
-    user.setPasswordHash(new BCryptPasswordEncoder().encode("password"));
+    user.setPasswordHash(passwordEncoder.encode("password"));
     user.setRole(Role.ADMIN);
+
     when(repository.findByLogin("Ivan")).thenReturn(Optional.of(user));
     when(tokenService.generateAccessToken(1L, "ADMIN")).thenReturn("access");
     when(tokenService.generateRefreshToken(1L, "ADMIN")).thenReturn("refresh");
@@ -98,7 +102,7 @@ class AuthUserServiceTest {
   void login_shouldThrowInvalidCredentials() {
     LoginRequestDto request = new LoginRequestDto("Ivan", "wrong");
     AuthUser user = new AuthUser();
-    user.setPasswordHash(new BCryptPasswordEncoder().encode("password"));
+    user.setPasswordHash(passwordEncoder.encode("password"));
 
     when(repository.findByLogin("Ivan")).thenReturn(Optional.of(user));
 
@@ -110,7 +114,7 @@ class AuthUserServiceTest {
   void refresh_shouldRefreshToken() {
     RefreshRequestDto request = new RefreshRequestDto("refreshToken");
 
-    when(tokenService.isTokenValid("refreshToken")).thenReturn(true);
+    doNothing().when(tokenService).validateTokenOrThrow("refreshToken");
     when(tokenService.getUserId("refreshToken")).thenReturn(1L);
     when(tokenService.getRole("refreshToken")).thenReturn("ADMIN");
     when(tokenService.generateAccessToken(1L, "ADMIN")).thenReturn("newAccess");
@@ -121,19 +125,9 @@ class AuthUserServiceTest {
   }
 
   @Test
-  void refresh_shouldThrowInvalidToken() {
-    RefreshRequestDto request = new RefreshRequestDto("bad");
-
-    when(tokenService.isTokenValid("bad")).thenReturn(false);
-
-    assertThrows(InvalidTokenException.class,
-            () -> authUserService.refresh(request));
-  }
-
-  @Test
   void validate_shouldValidateToken() {
     ValidateRequestDto request = new ValidateRequestDto("access");
-    when(tokenService.isTokenValid("access")).thenReturn(true);
+    doNothing().when(tokenService).validateTokenOrThrow("access");
     when(tokenService.getUserId("access")).thenReturn(1L);
     when(tokenService.getRole("access")).thenReturn("ADMIN");
 
@@ -143,14 +137,5 @@ class AuthUserServiceTest {
             () -> assertEquals(1L, actual.userId()),
             () -> assertEquals("ADMIN", actual.role())
     );
-  }
-
-  @Test
-  void validate_shouldThrowInvalidToken() {
-    ValidateRequestDto request = new ValidateRequestDto("bad");
-    when(tokenService.isTokenValid("bad")).thenReturn(false);
-
-    assertThrows(InvalidTokenException.class,
-            () -> authUserService.validate(request));
   }
 }

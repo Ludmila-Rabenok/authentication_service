@@ -11,7 +11,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
   @ExceptionHandler(InvalidCredentialsException.class)
@@ -31,9 +33,10 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ErrorResponse(e.getMessage()));
   }
+
   @ExceptionHandler(InvalidTokenException.class)
   public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException e) {
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+    return ResponseEntity.status(e.getStatus())
             .body(new ErrorResponse(e.getMessage()));
   }
 
