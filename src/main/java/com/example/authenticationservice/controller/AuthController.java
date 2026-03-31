@@ -9,7 +9,6 @@ import com.example.authenticationservice.dto.response.RegisterResponseDto;
 import com.example.authenticationservice.dto.response.TokenResponseDto;
 import com.example.authenticationservice.dto.response.ValidateResponseDto;
 import com.example.authenticationservice.service.AuthUserService;
-import com.example.authenticationservice.service.impl.AuthUserServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
