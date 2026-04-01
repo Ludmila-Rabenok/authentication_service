@@ -24,21 +24,31 @@ public interface TokenService {
    * @param role   role of the user
    * @return signed JWT refresh token
    */
-
   String generateRefreshToken(Long userId, String role);
 
   /**
-   * Validates the provided JWT token and throws an exception if it is invalid.
+   * Validates the provided refresh JWT token and throws an exception if it is invalid.
    * <p>
-   * This method checks token signature, expiration time, structure and
-   * supported format.
+   * This method checks token signature, expiration time, structure, supported format and token type.
    *
-   * @param token JWT token to validate
+   * @param token JWT refresh token to validate
    * @throws InvalidTokenException if the token is expired, malformed,
    *                               has an invalid signature, is unsupported,
-   *                               or is empty
+   *                               is empty or has an incorrect token type
    */
-  void validateTokenOrThrow(String token);
+  void validateRefreshTokenOrThrow(String token);
+
+  /**
+   * Validates the provided access JWT token and throws an exception if it is invalid.
+   * <p>
+   * This method checks token signature, expiration time, structure, supported format and token type.
+   *
+   * @param token JWT access token to validate
+   * @throws InvalidTokenException if the token is expired, malformed,
+   *                               has an invalid signature, is unsupported,
+   *                               is empty or has an incorrect token type
+   */
+  void validateAccessTokenOrThrow(String token);
 
   /**
    * Extracts the user ID from a valid JWT token.

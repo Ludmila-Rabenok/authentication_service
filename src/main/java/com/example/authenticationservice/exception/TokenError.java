@@ -5,5 +5,6 @@ public enum TokenError {
   MALFORMED,
   EMPTY,
   EXPIRED,
-  UNSUPPORTED
+  UNSUPPORTED,
+  INVALID_TOKEN_TYPE
 }

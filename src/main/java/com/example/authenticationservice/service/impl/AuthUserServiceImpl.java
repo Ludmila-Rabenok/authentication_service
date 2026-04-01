@@ -34,6 +34,7 @@ public class AuthUserServiceImpl implements AuthUserService {
     this.passwordEncoder = passwordEncoder;
   }
 
+  @Override
   @Transactional
   public RegisterResponseDto register(RegisterRequestDto request) {
     if (repository.findByLogin(request.login()).isPresent()) {
@@ -42,11 +43,12 @@ public class AuthUserServiceImpl implements AuthUserService {
     AuthUser user = new AuthUser();
     user.setLogin(request.login());
     user.setPasswordHash(passwordEncoder.encode(request.password()));
-    user.setRole(Role.valueOf(request.role()));
+    user.setRole(Role.fromString(request.role()));
     AuthUser saved = repository.save(user);
     return new RegisterResponseDto(saved.getId());
   }
 
+  @Override
   public TokenResponseDto login(LoginRequestDto request) {
     AuthUser user = repository.findByLogin(request.login())
             .orElseThrow(() -> new UserNotFoundException(request.login()));
@@ -58,18 +60,20 @@ public class AuthUserServiceImpl implements AuthUserService {
     return new TokenResponseDto(access, refresh);
   }
 
+  @Override
   public AccessTokenResponseDto refresh(RefreshRequestDto request) {
     String refreshToken = request.refreshToken();
-    tokenService.validateTokenOrThrow(refreshToken);
+    tokenService.validateRefreshTokenOrThrow(refreshToken);
     Long userId = tokenService.getUserId(refreshToken);
     String role = tokenService.getRole(refreshToken);
     String newAccess = tokenService.generateAccessToken(userId, role);
     return new AccessTokenResponseDto(newAccess);
   }
 
+  @Override
   public ValidateResponseDto validate(ValidateRequestDto request) {
     String accessToken = request.accessToken();
-    tokenService.validateTokenOrThrow(accessToken);
+    tokenService.validateAccessTokenOrThrow(accessToken);
     Long userId = tokenService.getUserId(accessToken);
     String role = tokenService.getRole(accessToken);
     return new ValidateResponseDto(userId, role);

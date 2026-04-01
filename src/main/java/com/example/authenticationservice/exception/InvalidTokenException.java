@@ -18,6 +18,7 @@ public class InvalidTokenException extends RuntimeException {
       case EMPTY -> "Token is empty";
       case EXPIRED -> "Token expired";
       case UNSUPPORTED -> "Unsupported token format";
+      case INVALID_TOKEN_TYPE -> "Invalid token type";
     };
   }
 

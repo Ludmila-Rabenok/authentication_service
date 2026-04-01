@@ -114,7 +114,7 @@ class AuthUserServiceImplTest {
   void refresh_shouldRefreshToken() {
     RefreshRequestDto request = new RefreshRequestDto("refreshToken");
 
-    doNothing().when(tokenService).validateTokenOrThrow("refreshToken");
+    doNothing().when(tokenService).validateRefreshTokenOrThrow("refreshToken");
     when(tokenService.getUserId("refreshToken")).thenReturn(1L);
     when(tokenService.getRole("refreshToken")).thenReturn("ADMIN");
     when(tokenService.generateAccessToken(1L, "ADMIN")).thenReturn("newAccess");
@@ -127,7 +127,7 @@ class AuthUserServiceImplTest {
   @Test
   void validate_shouldValidateToken() {
     ValidateRequestDto request = new ValidateRequestDto("access");
-    doNothing().when(tokenService).validateTokenOrThrow("access");
+    doNothing().when(tokenService).validateAccessTokenOrThrow("access");
     when(tokenService.getUserId("access")).thenReturn(1L);
     when(tokenService.getRole("access")).thenReturn("ADMIN");
 

@@ -2,6 +2,7 @@ package com.example.authenticationservice.exception.handler;
 
 import com.example.authenticationservice.dto.error.ErrorResponse;
 import com.example.authenticationservice.exception.InvalidCredentialsException;
+import com.example.authenticationservice.exception.InvalidRoleException;
 import com.example.authenticationservice.exception.InvalidTokenException;
 import com.example.authenticationservice.exception.UserAlreadyExistsException;
 import com.example.authenticationservice.exception.UserNotFoundException;
@@ -57,6 +58,11 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(new ErrorResponse("Forbidden"));
+  }
+  @ExceptionHandler(InvalidRoleException.class)
+  public ResponseEntity<ErrorResponse> handleInvalidRole(InvalidRoleException e){
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse(e.getMessage()));
   }
 
   @ExceptionHandler(Exception.class)

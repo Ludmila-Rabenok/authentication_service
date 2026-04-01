@@ -13,6 +13,7 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
       JWT_SECRET: "uQ2x8V7p1mJ9kA3sL0fWc9TqZ5rN8yB1vH4eD7tP6gK2mS9xQ8lF3zR7wC5uN0aJ"
+      INTERNAL_SECRET: "superinternalgatewaysecret123"
     command: sh -c "sleep 5 && java -jar app.jar"
 
   auth-postgres:
