@@ -7,6 +7,7 @@ import com.example.authenticationservice.service.impl.TokenServiceImpl;
 import com.example.authenticationservice.service.token.TokenType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -60,16 +61,14 @@ class TokenServiceImplTest {
       case ACCESS -> service.generateAccessToken(1L, "ADMIN");
       case REFRESH -> service.generateRefreshToken(1L, "ADMIN");
     };
+    Executable executable = switch (type) {
+      case ACCESS -> () -> service.validateAccessTokenOrThrow(token);
+      case REFRESH -> () -> service.validateRefreshTokenOrThrow(token);
+    };
 
-    String actualMessage = assertThrows(InvalidTokenException.class,
-            () -> {
-              if (type == TokenType.ACCESS) {
-                service.validateAccessTokenOrThrow(token);
-              } else {
-                service.validateRefreshTokenOrThrow(token);
-              }
-            }
-    ).getMessage();
+    String actualMessage = assertThrows(InvalidTokenException.class, executable)
+            .getMessage();
+
     assertEquals(expectedMessage, actualMessage);
   }
 
@@ -77,16 +76,14 @@ class TokenServiceImplTest {
   @EnumSource(TokenType.class)
   void shouldThrowInvalidTokenException_whenTokenEmpty(TokenType type) {
     String expectedMessage = new InvalidTokenException(TokenError.EMPTY).getMessage();
+    Executable executable = switch (type) {
+      case ACCESS -> () -> tokenService.validateAccessTokenOrThrow("");
+      case REFRESH -> () -> tokenService.validateRefreshTokenOrThrow("");
+    };
 
-    String actualMessage = assertThrows(InvalidTokenException.class,
-            () -> {
-              if (type == TokenType.ACCESS) {
-                tokenService.validateAccessTokenOrThrow("");
-              } else {
-                tokenService.validateRefreshTokenOrThrow("");
-              }
-            }
-    ).getMessage();
+    String actualMessage = assertThrows(InvalidTokenException.class, executable)
+            .getMessage();
+
     assertEquals(expectedMessage, actualMessage);
   }
 
@@ -94,16 +91,14 @@ class TokenServiceImplTest {
   @EnumSource(TokenType.class)
   void shouldThrowInvalidTokenException_whenTokenMalformed(TokenType type) {
     String expectedMessage = new InvalidTokenException(TokenError.MALFORMED).getMessage();
+    Executable executable = switch (type) {
+      case ACCESS -> () -> tokenService.validateAccessTokenOrThrow("not-a-jwt-token");
+      case REFRESH -> () -> tokenService.validateRefreshTokenOrThrow("not-a-jwt-token");
+    };
 
-    String actualMessage = assertThrows(InvalidTokenException.class,
-            () -> {
-              if (type == TokenType.ACCESS) {
-                tokenService.validateAccessTokenOrThrow("not-a-jwt-token");
-              } else {
-                tokenService.validateRefreshTokenOrThrow("not-a-jwt-token");
-              }
-            }
-    ).getMessage();
+    String actualMessage = assertThrows(InvalidTokenException.class, executable)
+            .getMessage();
+
     assertEquals(expectedMessage, actualMessage);
   }
 
@@ -112,16 +107,14 @@ class TokenServiceImplTest {
   void shouldThrowInvalidTokenException_whenTokenUnsupported(TokenType type) {
     String expectedMessage = new InvalidTokenException(TokenError.UNSUPPORTED).getMessage();
     String unsupportedToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiIxIn0.";
+    Executable executable = switch (type) {
+      case ACCESS -> () -> tokenService.validateAccessTokenOrThrow(unsupportedToken);
+      case REFRESH -> () -> tokenService.validateRefreshTokenOrThrow(unsupportedToken);
+    };
 
-    String actualMessage = assertThrows(InvalidTokenException.class,
-            () -> {
-              if (type == TokenType.ACCESS) {
-                tokenService.validateAccessTokenOrThrow(unsupportedToken);
-              } else {
-                tokenService.validateRefreshTokenOrThrow(unsupportedToken);
-              }
-            }
-    ).getMessage();
+    String actualMessage = assertThrows(InvalidTokenException.class, executable)
+            .getMessage();
+
     assertEquals(expectedMessage, actualMessage);
   }
 
@@ -134,16 +127,13 @@ class TokenServiceImplTest {
       case REFRESH -> tokenService.generateRefreshToken(1L, "ADMIN");
     };
     String tampered = token.substring(0, token.length() - 1) + "X";
+    Executable executable = switch (type) {
+      case ACCESS -> () -> tokenService.validateAccessTokenOrThrow(tampered);
+      case REFRESH -> () -> tokenService.validateRefreshTokenOrThrow(tampered);
+    };
 
-    String actualMessage = assertThrows(InvalidTokenException.class,
-            () -> {
-              if (type == TokenType.ACCESS) {
-                tokenService.validateAccessTokenOrThrow(tampered);
-              } else {
-                tokenService.validateRefreshTokenOrThrow(tampered);
-              }
-            }
-    ).getMessage();
+    String actualMessage = assertThrows(InvalidTokenException.class, executable)
+            .getMessage();
     assertEquals(expectedMessage, actualMessage);
   }
 }
